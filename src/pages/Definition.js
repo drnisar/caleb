@@ -1,23 +1,46 @@
 import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { v4 as uuid } from "uuid";
+import NotFound from "./NotFound";
 
 export default function Definition() {
-  const [word, setWord] = useState();
-
+  const [word, setWord] = useState([]);
+  const [notFound, setNotFound] = useState(false);
+  let { search } = useParams();
+  const navigate = useNavigate();
   useEffect(() => {
-    fetch("https://api.dictionaryapi.dev/api/v2/entries/en/helicopter")
-      .then((response) => response.json())
+    fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + search)
+      .then((response) => {
+        if (response.status === 404) {
+          setNotFound(true);
+        }
+        return response.json();
+      })
       .then((data) => {
         setWord(data[0].meanings);
-        console.log(word[0]);
       });
   }, []);
+
+  if (notFound === true) {
+    return (
+      <>
+        <NotFound />
+      </>
+    );
+  }
   return (
     <>
-      <h1>Here is the definition</h1>
-      {word.map((meaning) => {
-        return <p>{meaning.definitions[0].definition}</p>;
-      })}
+      {word
+        ? word.map((meaning) => {
+            return (
+              <p key={uuid()}>
+                {meaning.partOfSpeech + ": "}
+                {meaning.definitions[0].definition}
+              </p>
+            );
+          })
+        : null}
     </>
   );
 }
-// not working here
+// 27 jun 2023
